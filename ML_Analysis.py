@@ -29,8 +29,7 @@ columns = ['security',
 'best_#_of_n_neighbors',
 'accuracy',
 'precision',
-'recall',
-'latest_prediction']
+'recall']
 
 analysis_results = []
 
@@ -182,8 +181,9 @@ def doMLalgoAnalysis(ticker, correlated_security):
 	best_params, security_of_int_df, counter= do_grid_search(ticker, correlated_security)
 	security_of_int_df.drop(labels='Date', axis=1, inplace=True)
 	latest_date=security_of_int_df.iloc[[-1]]
-	X=security_of_int_df.values
+	X=security_of_int_df[correlated_security].values
 	y=security_of_int_df['{}_target'.format(ticker)].values
+	X=X.reshape(-1,1)
 
 	X_train, X_test, y_train, y_test=model_selection.train_test_split(X,y,
 																test_size=0.25)
@@ -212,11 +212,11 @@ def doMLalgoAnalysis(ticker, correlated_security):
 
 	precision = sum(precisions)/len(precisions)
 	recall = sum(recalls)/len(recalls)
-	latest_prediction=clf.predict(latest_date.reset_index().drop("{}_target".format(ticker), axis=1).values)
+	#latest_prediction=clf.predict(latest_date.reset_index().drop("{}_target".format(ticker), axis=1).values)
 
 	print('precision ',precision)
 	print('recall ',recall)
-	print('latest prediction:',latest_prediction)
+	#print('latest prediction:',latest_prediction)
 	print()
 
 	row =[ticker,
@@ -227,11 +227,12 @@ def doMLalgoAnalysis(ticker, correlated_security):
 	best_params['n_neighbors'],
 	round(confidence,2),
 	round(precision,2),
-	round(recall,2),
-	latest_prediction[0]]
+	round(recall,2)]
+	#latest_prediction[0]]
 
-	analysis_results.append(row)
-	print()
+	analysis_results.append(row);
+
+	return analysis_results
 
 
 def do_ml(ticker, correlated_security):
@@ -289,8 +290,8 @@ def try_all(sorted_correlations,performMLalgoAnalysis):
 			try:
 				print(key)
 				print()
-				doMLalgoAnalysis(key,sorted_correlations[key])
-
+				analysis_results = doMLalgoAnalysis(key,sorted_correlations[key])
+                            
 			except Exception as e:
 				print(e)
 				pass
